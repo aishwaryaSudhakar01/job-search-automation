@@ -55,7 +55,6 @@ Toggle the workflow on. It runs on schedule from there.
 
 ## Notes
 - Credentials are not included — add your own
-- The Firecrawl branch is limited to 1 company in this repo for testing; remove the Limit node before deploying live
 - For reliable scheduling, deploy n8n to an always-on server rather than running it locally
 
 ---
