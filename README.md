@@ -1,9 +1,9 @@
 ```
 # Job Search Automation
 
-An automated job discovery pipeline built with n8n that monitors 95+ company career pages and email sources, filters postings using Claude AI, and delivers a curated digest via Telegram.
+An automated job discovery pipeline built with n8n that monitors multiple company career pages and email sources, filters postings using Claude AI, and delivers a curated digest via Telegram.
 
-<img width="1320" height="576" alt="image" src="https://github.com/user-attachments/assets/2e8f0972-58bd-47d9-b256-160f6b97ba94" />
+![Workflow Canvas](workflow-canvas.png)
 
 ## Problem
 Manually checking dozens of company career pages and job alert emails is slow and inconsistent. Relevant postings get missed. This pipeline automates the entire discovery and filtering process.
