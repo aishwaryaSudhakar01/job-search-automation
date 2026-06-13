@@ -1,7 +1,5 @@
 # Job Search Automation 
 
-> Why manually check 95 career pages when automation can do it for you?
-
 An n8n pipeline that monitors company career pages and job alert emails, filters postings with Claude AI, and sends a curated digest straight to Telegram — fully automated, end to end.
 
 <img width="1314" height="565" alt="Workflow canvas" src="https://github.com/user-attachments/assets/c73886c0-d25a-479c-8e96-b82149f20aa7" />
