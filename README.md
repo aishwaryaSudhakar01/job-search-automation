@@ -1,73 +1,67 @@
-```
-# Job Search Automation
+# Job Search Automation — Discover Smarter
 
-An automated job discovery pipeline built with n8n that monitors multiple company career pages and email sources, filters postings using Claude AI, and delivers a curated digest via Telegram.
+> Why manually check 95 career pages when automation can do it for you?
 
-![Workflow Canvas](workflow-canvas.png)
+An n8n pipeline that monitors company career pages and job alert emails, filters postings with Claude AI, and sends a curated digest straight to Telegram — fully automated, end to end.
 
-## Problem
-Manually checking dozens of company career pages and job alert emails is slow and inconsistent. Relevant postings get missed. This pipeline automates the entire discovery and filtering process.
+<img width="1314" height="565" alt="Workflow canvas" src="https://github.com/user-attachments/assets/c73886c0-d25a-479c-8e96-b82149f20aa7" />
+
+---
 
 ## How it works
 
-**Discovery (5 parallel sources)**
-- **Ashby, Greenhouse, Lever APIs** — free structured endpoints that return all current postings in one call, no scraping needed
-- **Firecrawl** — scrapes custom career pages for companies not on a standard ATS
-- **Gmail** — reads job alert emails directly via the Gmail API, extracting structured fields from email HTML
+1. **Schedule fires** — triggers every 3 days automatically
+2. **Five sources run in parallel** — Ashby, Greenhouse, and Lever APIs (free), Firecrawl for custom career pages, and Gmail for job alert emails
+3. **Everything merges** — all sources combine into a single stream; email finds take priority over career page finds for the same role
+4. **Deduplication** — already-seen postings are filtered out against the existing tracker
+5. **Claude filters** — classifies each posting by role archetype and drops non-matches, wrong locations, and excluded role types
+6. **Results land in two places** — Google Sheets gets a new row with a clickable link; Telegram gets a lettered digest or a rest-day note
 
-**Filtering**
-- All 5 sources merge into a single stream
-- Deduplication runs against the existing tracker, with email sources taking priority over career page finds for the same role
-- Claude (claude-sonnet-4-6) classifies each posting by role archetype and filters out non-matches, wrong locations, excluded role types, and anything that isn't a real internship posting
+---
 
-**Output**
-- Matched postings are appended to a Google Sheet tracker with clickable job links
-- A Telegram message delivers the day's finds as a lettered list, or a rest-day note if nothing new was found
+## Tech Stack
 
-## Architecture
-
-```
-Schedule Trigger
-├── Read Target Companies (Google Sheets, 95 companies)
-│   └── Switch (by ATS type)
-│       ├── Ashby      → HTTP Request → Parse Ashby
-│       ├── Greenhouse → HTTP Request → Parse Greenhouse
-│       ├── Lever      → HTTP Request → Parse Lever
-│       └── Custom     → Firecrawl   → Parse Firecrawl
-└── Email Source (Gmail) → Parse Email
-         ↓
-       Merge (5 inputs)
-         ↓
-  Load All Tracker URLs
-         ↓
-       Dedupe
-         ↓
-  Claude (Basic LLM Chain + Structured Output Parser)
-         ↓
-    Final Parsing
-    ├── Append Jobs to Tracker (Google Sheets)
-    └── Aggregate → Telegram
-```
-
-## Tools
-| Tool | Purpose |
+| Layer | Technology |
 |---|---|
-| n8n | Workflow orchestration |
-| Claude (Anthropic) | AI filtering and archetype classification |
-| Firecrawl | Scraping custom career pages |
-| Google Sheets API | Company watchlist + job tracker |
-| Gmail API | Reading job alert emails |
-| Telegram Bot API | Digest delivery |
+| Orchestration | n8n |
+| AI Filtering | Claude Sonnet 4.6 (Anthropic) |
+| Career Page Scraping | Firecrawl |
+| ATS APIs | Ashby, Greenhouse, Lever (all free) |
+| Email Source | Gmail API |
+| Tracker | Google Sheets |
+| Notifications | Telegram Bot API |
+
+---
 
 ## Setup
-1. Import `workflow.json` into your n8n instance
-2. Add credentials for Anthropic, Google (Sheets + Gmail), Firecrawl, and Telegram
-3. Create a Google Sheet with two tabs: **Target** (company watchlist with columns: Company Name, Career Page URL, ATS Type) and **Tracker** (job log)
-4. Populate the Target tab with your company list
-5. Activate the workflow
+
+### 1. Import the workflow
+Download `workflow.json` and import it into your n8n instance.
+
+### 2. Add credentials
+Add your own credentials in n8n's credential manager for:
+- Anthropic API
+- Google (Sheets + Gmail OAuth)
+- Firecrawl
+- Telegram Bot
+
+### 3. Set up Google Sheets
+Create a spreadsheet with two tabs:
+- **Target** — company watchlist (columns: Company Name, Career Page URL, ATS Type)
+- **Tracker** — job log (columns: Job Tracker ID, Company Name, Source, Application URL, Archetype, Job Title, Job Vacancy ID, Description, Application Status, Created At)
+
+### 4. Activate
+Toggle the workflow on. It runs on schedule from there.
+
+---
 
 ## Notes
-- Credentials are not included — add your own in n8n's credential manager
-- The Firecrawl node is limited to 1 company in the repo for testing; remove the Limit node before deploying
-- Runs on a schedule (every 3 days by default); for reliable scheduling, deploy to an always-on server
-```
+- Credentials are not included — add your own
+- The Firecrawl branch is limited to 1 company in this repo for testing; remove the Limit node before deploying live
+- For reliable scheduling, deploy n8n to an always-on server rather than running it locally
+
+---
+
+## Built by
+
+[Aishwarya Sudhakar](https://aishwaryas-portfolio.lovable.app/)
