@@ -1,4 +1,4 @@
-# Job Search Automation — Discover Smarter
+# Job Search Automation 
 
 > Why manually check 95 career pages when automation can do it for you?
 
