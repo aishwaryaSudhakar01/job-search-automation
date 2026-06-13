@@ -1,0 +1,957 @@
+{
+  "name": "Job Lead Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 3,
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -224
+      ],
+      "id": "8dd7a10c-9a54-4f6a-a981-389d33740956",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Your prompt here - tune it for the job you're looking for",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1632,
+        -288
+      ],
+      "id": "94d8a7d5-f3a6-4886-9162-60a70e5f7109",
+      "name": "Basic LLM Chain",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        1536,
+        80
+      ],
+      "id": "d32a7735-7f35-4e38-96e9-43f32a8604d7",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "Your Anthropic API key (starts sk-ant-)",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "format based on preferences",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1696,
+        -112
+      ],
+      "id": "bdcd9ec8-b605-4689-922c-7b6d45fd19a7",
+      "name": "Structured Output Parser",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "Replace with Telegram Chat ID",
+        "text": "={{ $json.data[0].no_matches === true ? 'Nothing new today. Take a break! ☕️' : '🎯 Found ' + $json.data.length + ' new job' + ($json.data.length === 1 ? '' : 's') + ' for you!\\n\\n' + $json.data.map((item, i) => String.fromCharCode(65 + i) + ') ' + item['Company Name'] + ' — ' + item['Job Title'] + '\\n[View job](' + item['Application URL'] + ')').join('\\n\\n') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2032,
+        544
+      ],
+      "id": "06b30f89-5b32-4198-8a30-c3908360a71f",
+      "name": "Send a text message",
+      "webhookId": "bac41535-0f5b-462c-9c5b-57c51fd1cd24",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "Telegram bot token (digits:letters format)",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        320
+      ],
+      "id": "8f9efd3b-90d7-4672-b38a-c50b31278d54",
+      "name": "Aggregate",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "Replace with Document ID",
+          "mode": "list",
+          "cachedResultName": "Job Lead Generation",
+          "cachedResultUrl": "Link"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 293135368,
+          "mode": "list",
+          "cachedResultName": "Target",
+          "cachedResultUrl": "Link"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -144,
+        64
+      ],
+      "id": "d948da7a-5bae-4f8b-9ad7-0de3a5af702d",
+      "name": "Read Target Companies",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Google OAuth client ID/secret",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "Replace with Document ID",
+          "mode": "list",
+          "cachedResultName": "Summer Internship Leads",
+          "cachedResultUrl": "Link"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tracker",
+          "cachedResultUrl": "Link"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Tracker ID": "={{ $json['Job Tracker ID'] }}",
+            "Company Name": "={{ $json['Company Name'] }}",
+            "Application URL": "={{ '=HYPERLINK(\"' + $json['Application URL'] + '\",\"Link\")' }}",
+            "Archetype": "={{ $json.Archetype }}",
+            "Job Title": "={{ $json[\"Job Title\"] }}",
+            "Job Vacancy ID": "={{ $json[\"Job Vacancy ID\"] }}",
+            "Description": "={{ $json.Description }}",
+            "Application Status": "={{ $json[\"Application Status\"] }}",
+            "Created At": "={{ $json[\"Created At\"] }}",
+            "Source": "={{ $json['Source'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Job Tracker ID",
+              "displayName": "Job Tracker ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Application URL",
+              "displayName": "Application URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Archetype",
+              "displayName": "Archetype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Vacancy ID",
+              "displayName": "Job Vacancy ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Application Status",
+              "displayName": "Application Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2016,
+        80
+      ],
+      "id": "2528fdff-beb8-417c-86d3-34ec964f9390",
+      "name": "Append Jobs to Tracker",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Google OAuth client ID/secret",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['ATS Type'] }}",
+                    "rightValue": "ashby",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "84da8044-dec5-4841-beb5-98ca7a509ccf"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "eb4a86e7-48ad-4987-987e-f0109a4ff136",
+                    "leftValue": "={{ $json['ATS Type'] }}",
+                    "rightValue": "=greenhouse",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fc5acfaa-6942-4194-bbb0-23378c1c0af4",
+                    "leftValue": "={{ $json['ATS Type'] }}",
+                    "rightValue": "lever",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "08654df6-b590-497c-a84b-9f4f39f3a732",
+                    "leftValue": "={{ $json['ATS Type'] }}",
+                    "rightValue": "custom",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 3
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        -96
+      ],
+      "id": "d52062fc-2b03-49e6-a953-5919f9228e0a",
+      "name": "Switch",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "Format based on career pages source"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -272
+      ],
+      "id": "e6a7fbb4-81b0-438c-9a30-0c274b020dbd",
+      "name": "Parse Ashby",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.ashbyhq.com/posting-api/job-board/{{ $json['Career Page URL'].split('/').pop() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        -272
+      ],
+      "id": "8795b119-fc08-4106-9a0e-d19d07d761cf",
+      "name": "HTTP Request (Ashby)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://boards-api.greenhouse.io/v1/boards/{{ $json['Career Page URL'].split('/').pop() }}/jobs\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        -128
+      ],
+      "id": "9ba21852-b71b-46e2-8d62-6dcf1ebf0a3c",
+      "name": "HTTP Request (Greenhouse)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "Format based on career pages source"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -128
+      ],
+      "id": "6ea7e3d4-ad93-4fab-ba49-97239b098d94",
+      "name": "Parse Greenhouse",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.lever.co/v0/postings/{{ $json['Career Page URL'].split('/').pop() }}?mode=json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        32
+      ],
+      "id": "a661fe11-7b78-4e0c-a906-00dccf8fe486",
+      "name": "HTTP Request (Lever)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "format based on preferences"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        32
+      ],
+      "id": "68aadd32-bf44-4dd4-b441-f817150ea445",
+      "name": "Parse Lever",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "Default",
+        "operation": "Scrape A Url And Get Its Content",
+        "url": "={{ $json['Career Page URL'] }}",
+        "formats": [
+          "markdown"
+        ],
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-firecrawl.fireCrawl",
+      "typeVersion": 1,
+      "position": [
+        496,
+        176
+      ],
+      "id": "84b70ce2-d71a-4b8e-80a1-7372b70ddce8",
+      "name": "Firecrawl",
+      "alwaysOutputData": true,
+      "credentials": {
+        "fireCrawlApi": {
+          "id": "Firecrawl API key",
+          "name": "FireCrawl account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "format based on preferences"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ],
+      "id": "62e1f719-d76a-4ae1-8f66-3be3b0fe32e1",
+      "name": "Parse Firecrawl",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1072,
+        -16
+      ],
+      "id": "a3e17c7c-e77e-425b-b420-ba09c726cec4",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "Replace with Document ID",
+          "mode": "list",
+          "cachedResultName": "Job Lead Generation",
+          "cachedResultUrl": "Link"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tracker",
+          "cachedResultUrl": "Link"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        32
+      ],
+      "id": "44829e4e-9b0d-42df-b589-ba9452828775",
+      "name": "Load All Tracker URLs",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Google OAuth client ID/secret",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const claudeResults = $input.all();\nconst originalJobs = $('Dedupe').all();\nconst items = [];\n\nfor (let i = 0; i < claudeResults.length; i++) {\n  const claudeOutput = claudeResults[i].json.output;\n  const original = originalJobs[i].json;\n\n  if (!claudeOutput.is_match) continue;\n\n  const url = original.url || '';\n  let hash = 0;\n  for (let j = 0; j < url.length; j++) {\n    hash = ((hash << 5) - hash) + url.charCodeAt(j);\n    hash |= 0;\n  }\n\n  items.push({\n    json: {\n      \"Job Tracker ID\": Math.abs(hash).toString(),\n      \"Company Name\": original.company || '',\n      \"Source\": original.source || 'Career Pages',\n      \"Application URL\": url,\n      \"Archetype\": claudeOutput.archetype || '',\n      \"Job Title\": original.title || '',\n      \"Job Vacancy ID\": original.vacancy_id || '',\n      \"Description\": original.description || '',\n      \"Application Status\": \"Not Started\",\n      \"Created At\": new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })\n    }\n  });\n}\n\nif (items.length === 0) {\n  return [{ json: { no_matches: true } }];\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        -240
+      ],
+      "id": "494ac1b1-f8ce-4950-94d4-81bdd10ca02a",
+      "name": "Final Parsing",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "q": "Replace with email sources",
+          "receivedAfter": "2026-06-13T00:00:00"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        256
+      ],
+      "id": "f314797b-527e-4c52-914b-cd02d11d2822",
+      "name": "Email Source",
+      "webhookId": "b204f473-6109-4bd7-8e42-44f3a6a336de",
+      "alwaysOutputData": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Google OAuth client ID/secret",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "Format based on email source"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        352
+      ],
+      "id": "5b7c1e9b-f8cf-4839-a7b1-b8fb6bda7558",
+      "name": "Parse Email",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\n// existing tracker URLs (loaded just before this node)\nconst trackerItems = $('Load All Tracker URLs').all();\nconst existingUrls = new Set(\n  trackerItems\n    .map(item => item.json['Application URL'])\n    .filter(Boolean)\n    .map(url => url.toLowerCase().trim())\n);\n\n// all merged jobs from every source\nconst jobItems = $('Merge').all();\n\n// first pass: collect URLs that came from Gmail\nconst gmailUrls = new Set();\nfor (const item of jobItems) {\n  if (item.json.ats_type === 'gmail') {\n    const url = (item.json.url || '').toLowerCase().trim();\n    if (url) gmailUrls.add(url);\n  }\n}\n\n// second pass: dedupe against tracker, within-run, and career-page-vs-Gmail\nconst seenInRun = new Set();\nfor (const item of jobItems) {\n  const url = (item.json.url || '').toLowerCase().trim();\n\n  if (!url) continue;\n  if (existingUrls.has(url)) continue;\n  if (seenInRun.has(url)) continue;\n  if (item.json.ats_type !== 'gmail' && gmailUrls.has(url)) continue;\n\n  seenInRun.add(url);\n  items.push({ json: item.json });\n}\n\nif (items.length === 0) {\n  return [{ json: { no_matches: true } }];\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -288
+      ],
+      "id": "8369f99f-8587-4763-9fd2-f5016b18d174",
+      "name": "Dedupe",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Target Companies",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Final Parsing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Jobs to Tracker": {
+      "main": [
+        []
+      ]
+    },
+    "Read Target Companies": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (Ashby)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request (Greenhouse)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request (Lever)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Firecrawl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (Ashby)": {
+      "main": [
+        [
+          {
+            "node": "Parse Ashby",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (Greenhouse)": {
+      "main": [
+        [
+          {
+            "node": "Parse Greenhouse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (Lever)": {
+      "main": [
+        [
+          {
+            "node": "Parse Lever",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl": {
+      "main": [
+        [
+          {
+            "node": "Parse Firecrawl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ashby": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Greenhouse": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Parse Lever": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Parse Firecrawl": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Load All Tracker URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load All Tracker URLs": {
+      "main": [
+        [
+          {
+            "node": "Dedupe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Parsing": {
+      "main": [
+        [
+          {
+            "node": "Append Jobs to Tracker",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Source": {
+      "main": [
+        [
+          {
+            "node": "Parse Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Dedupe": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "versionId",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "instanceId"
+  },
+  "nodeGroups": [],
+  "id": "workflowId",
+  "tags": []
+}
